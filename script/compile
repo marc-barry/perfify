@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e
+
+source "$(dirname "${BASH_SOURCE[0]}")/util.bash"
+
+ensure_go_binary godep github.com/tools/godep
+ensure_go_binary errcheck github.com/kisielk/errcheck
+
+target="$(dirname "${BASH_SOURCE[0]}")/../perfify"
+
+set -x
+go fmt .
+go vet .
+godep go build -o "${target}"
+GOPATH="$(godep path)" errcheck .
+
+git rev-parse HEAD > REVISION
