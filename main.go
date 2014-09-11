@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"github.com/codegangsta/cli"
+	"os"
 )
 
 func main() {
-	fmt.Println("Starting...")
+	cli.NewApp().Run(os.Args)
 }
