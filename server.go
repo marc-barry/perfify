@@ -105,18 +105,23 @@ func udpServerCommand(c *cli.Context) {
 
 	defer closeUDPConn(conn)
 
-	buf := make([]byte, len(DEFAULT_BYTES))
+	buf := make([]byte, 4096)
 
 	for {
-		_, addr, err := conn.ReadFromUDP(buf[:])
+		nr, addr, err := conn.ReadFromUDP(buf[:])
 		if err != nil {
 			fmt.Printf("Error reading: %s", err.Error())
 		}
 
-		_, err = conn.WriteToUDP(DEFAULT_BYTES, addr)
+		fmt.Printf("Pinged with %d bytes.\n", nr)
+
+		nw, err := conn.WriteToUDP(buf[0:nr], addr)
 		if err != nil {
 			println("Write to server failed: ", err.Error())
 			os.Exit(1)
 		}
+
+		fmt.Printf("Read %d bytes.\n", nr)
+		fmt.Printf("Wrote %d bytes.\n", nw)
 	}
 }

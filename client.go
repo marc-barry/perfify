@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"crypto/rand"
 	"fmt"
 	"github.com/codegangsta/cli"
@@ -60,7 +59,7 @@ func tcpPingCommand(c *cli.Context) {
 			os.Exit(1)
 		}
 
-		buf := make([]byte, 1000)
+		buf := make([]byte, 1024)
 
 		total := 0
 
@@ -98,8 +97,22 @@ func tcpPingCommand(c *cli.Context) {
 func udpPingCommand(c *cli.Context) {
 	n := c.Int(N_NAME)
 	size := c.Int(SIZE_NAME)
+
+	if size > 4096 {
+		fmt.Println("Size must be <= 4096.")
+		os.Exit(1)
+	}
+
 	data := make([]byte, size)
-	_, err := rand.Read(data)
+	count, err := rand.Read(data)
+	if err != nil {
+		println("Error genarating random data: ", err.Error())
+		os.Exit(1)
+	}
+	if count != size {
+		println("Size mismatch.")
+		os.Exit(1)
+	}
 
 	fmt.Printf("Ping UDP endpoint %d times with %d bytes.\n", n, size)
 
@@ -126,27 +139,36 @@ func udpPingCommand(c *cli.Context) {
 	var totalRtt int64 = 0
 	var totalSamples int64 = int64(n)
 
+	buf := make([]byte, 4096)
+
 	for i := 1; i <= n; i++ {
 		t := time.Now()
 
-		_, err = replyConn.WriteToUDP(data, serverAddr)
+		nw, err := replyConn.WriteToUDP(data, serverAddr)
 		if err != nil {
 			println("Write to server failed: ", err.Error())
 			os.Exit(1)
 		}
 
-		reply := make([]byte, len(data))
+		total := 0
 
-		_, _, err := replyConn.ReadFromUDP(reply)
-		if err != nil {
-			println("Read from server failed: ", err.Error())
-			os.Exit(1)
+		for {
+			nr, _, err := replyConn.ReadFromUDP(buf)
+			if err != nil && nr == 0 {
+				break
+			}
+
+			total += nr
+
+			if total == size {
+				break
+			}
 		}
 
 		rtt := time.Since(t)
 
-		if !bytes.Equal(data, reply) {
-			fmt.Printf("The sent and received data is not equal.\n")
+		if total != size {
+			fmt.Printf("The received data is a different size (sent: %d, recieved: %d).\n", nw, total)
 		}
 
 		fmt.Printf("UDP Ping(%d): %s\n", i, rtt.String())
