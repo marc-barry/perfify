@@ -9,7 +9,8 @@ const (
 	DEFAULT_SERVER_PORT    = "9999"
 	DEFAULT_REPLY_PORT     = "9998"
 	DEFAULT_REPLY_PORT_INT = 9998
-	N                      = "n"
+	N_NAME                 = "n"
+	SIZE_NAME              = "size"
 )
 
 var (

@@ -47,9 +47,14 @@ func main() {
 							},
 							Flags: []cli.Flag{
 								cli.IntFlag{
-									Name:  N,
+									Name:  N_NAME,
 									Value: 1,
 									Usage: "the number of ping requests",
+								},
+								cli.IntFlag{
+									Name:  SIZE_NAME,
+									Value: 1,
+									Usage: "the size of data in bytes",
 								},
 							},
 						},
@@ -67,9 +72,14 @@ func main() {
 							},
 							Flags: []cli.Flag{
 								cli.IntFlag{
-									Name:  N,
+									Name:  N_NAME,
 									Value: 1,
 									Usage: "the number of ping requests",
+								},
+								cli.IntFlag{
+									Name:  SIZE_NAME,
+									Value: 1,
+									Usage: "the size of data in bytes",
 								},
 							},
 						},

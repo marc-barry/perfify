@@ -6,6 +6,7 @@ import (
 	"github.com/codegangsta/cli"
 	"net"
 	"os"
+	"strconv"
 )
 
 func tcpServerCommand(c *cli.Context) {
@@ -30,25 +31,63 @@ func tcpServerCommand(c *cli.Context) {
 			fmt.Println("Error accepting: ", err.Error())
 			os.Exit(1)
 		}
+
 		// Handle connections in a new goroutine.
 		go handleTCPRequest(conn)
 	}
 }
 
 func handleTCPRequest(conn *net.TCPConn) {
-	defer closeTCPConn(conn)
+	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
 
-	scanner := bufio.NewScanner(conn)
+	sizeStr, err := rw.ReadString('\n')
+	if err != nil {
+		fmt.Printf("Can't read size: %s", err.Error())
+		return
+	}
 
-	for scanner.Scan() {
-		if _, err := conn.Write([]byte(scanner.Text())); err != nil {
-			fmt.Printf("Error writing to connection: %s", err.Error())
+	sizeStr = sizeStr[0 : len(sizeStr)-1]
+
+	size, err := strconv.Atoi(sizeStr)
+	if err != nil {
+		fmt.Printf("Can't convert size to int: %s", err.Error())
+		return
+	}
+
+	fmt.Printf("Pinged with %s bytes.\n", sizeStr)
+
+	buf := make([]byte, 1024)
+
+	totalRead := 0
+	totalWrote := 0
+
+	for {
+		nr, err := rw.Read(buf)
+		if err != nil || nr == 0 {
+			break
+		}
+
+		totalRead += nr
+
+		nw, err := rw.Write(buf[0:nr])
+		if err != nil {
+			break
+		}
+
+		err = rw.Flush()
+		if err != nil {
+			fmt.Printf("Error fluhing buffer: %s", err.Error())
+		}
+
+		totalWrote += nw
+
+		if totalRead == size {
 			break
 		}
 	}
-	if err := scanner.Err(); err != nil {
-		fmt.Printf("Error scanning: %s", err.Error())
-	}
+
+	fmt.Printf("Read %d bytes.\n", totalRead)
+	fmt.Printf("Wrote %d bytes.\n", totalWrote)
 }
 
 func udpServerCommand(c *cli.Context) {
