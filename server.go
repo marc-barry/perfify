@@ -74,18 +74,10 @@ func udpServerCommand(c *cli.Context) {
 			fmt.Printf("Error reading: %s", err.Error())
 		}
 
-		replyConn, err := net.DialUDP("udp", nil, &net.UDPAddr{IP: addr.IP, Port: DEFAULT_REPLY_PORT_INT})
-		if err != nil {
-			println("Dial failed: ", err.Error())
-			os.Exit(1)
-		}
-
-		_, err = replyConn.Write(DEFAULT_BYTES)
+		_, err = conn.WriteToUDP(DEFAULT_BYTES, addr)
 		if err != nil {
 			println("Write to server failed: ", err.Error())
 			os.Exit(1)
 		}
-
-		closeUDPConn(replyConn)
 	}
 }
