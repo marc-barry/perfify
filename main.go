@@ -6,5 +6,87 @@ import (
 )
 
 func main() {
-	cli.NewApp().Run(os.Args)
+	app := cli.NewApp()
+	app.Name = "perfify"
+	app.Usage = "Network performance testing."
+
+	app.Commands = []cli.Command{
+		{
+			Name:  "server",
+			Usage: "start as server",
+			Subcommands: []cli.Command{
+				{
+					Name:  "tcp",
+					Usage: "tcp server",
+					Action: func(c *cli.Context) {
+						tcpServerCommand(c)
+					},
+				},
+				{
+					Name:  "udp",
+					Usage: "udp server",
+					Action: func(c *cli.Context) {
+						udpServerCommand(c)
+					},
+				},
+			},
+		},
+		{
+			Name:  "client",
+			Usage: "start as client",
+			Subcommands: []cli.Command{
+				{
+					Name:  "tcp",
+					Usage: "tcp related commands",
+					Subcommands: []cli.Command{
+						{
+							Name:  "ping",
+							Usage: "perform a tcp ping",
+							Action: func(c *cli.Context) {
+								tcpPingCommand(c)
+							},
+							Flags: []cli.Flag{
+								cli.IntFlag{
+									Name:  N,
+									Value: 1,
+									Usage: "the number of ping requests",
+								},
+							},
+						},
+					},
+				},
+				{
+					Name:  "udp",
+					Usage: "udp related commands",
+					Subcommands: []cli.Command{
+						{
+							Name:  "ping",
+							Usage: "perform a udp ping",
+							Action: func(c *cli.Context) {
+								udpPingCommand(c)
+							},
+							Flags: []cli.Flag{
+								cli.IntFlag{
+									Name:  N,
+									Value: 1,
+									Usage: "the number of ping requests",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			Name:  "interfaces",
+			Usage: "list interface info",
+			Action: func(c *cli.Context) {
+				printInterfaces()
+			},
+		},
+	}
+
+	if err := app.Run(os.Args); err != nil {
+		println("Error running CLI app: ", err.Error())
+	}
 }
